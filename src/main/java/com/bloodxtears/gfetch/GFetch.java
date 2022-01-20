@@ -27,10 +27,10 @@ public class GFetch {
         String json = fetchUserInfo(url);
         if (json == null)
             return;
-        Map<String, Object> userdata = parseUserInfo(json);
-        if (userdata == null)
+        Map<String, Object> userinfo = parseUserInfo(json);
+        if (userinfo == null)
             return;
-
+        displayInfo(userinfo);
     }
 
     private URL validateUserInput(String[] args) {
@@ -88,18 +88,24 @@ public class GFetch {
     private Map<String, Object> parseUserInfo(String json) {
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, Object> jsonMap;
-        Map<String, Object> userdata  = new LinkedHashMap<String, Object>();
+        Map<String, Object> userinfo  = new LinkedHashMap<String, Object>();
         try {
             jsonMap = objectMapper.readValue(json, new TypeReference<Map<String, Object>>(){});
         } catch (JsonProcessingException e) {
             e.printStackTrace();
             return null;
         }
-        userdata.put("Username",jsonMap.get("login"));
-        userdata.put("Repos",jsonMap.get("public_repos"));
-        userdata.put("Gists",jsonMap.get("public_gists"));
-        userdata.put("Followers",jsonMap.get("followers"));
-        userdata.put("Url",jsonMap.get("url"));
-        return userdata;
+        userinfo.put("Username",jsonMap.get("login"));
+        userinfo.put("Repos",jsonMap.get("public_repos"));
+        userinfo.put("Gists",jsonMap.get("public_gists"));
+        userinfo.put("Followers",jsonMap.get("followers"));
+        userinfo.put("Url",jsonMap.get("url"));
+        return userinfo;
+    }
+
+    private void displayInfo(Map<String, Object> userinfo){
+        for (Map.Entry<String, Object> entry : userinfo.entrySet()) {
+            System.out.println(TAG_COLOR + entry.getKey() + RESET_COLOR + ": " + entry.getValue());
+        }
     }
 }
