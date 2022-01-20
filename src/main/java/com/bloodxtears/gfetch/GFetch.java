@@ -1,26 +1,39 @@
 package com.bloodxtears.gfetch;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.*;
 
 public class GFetch {
+    private static final String RESET_COLOR = "\u001B[0m";
+    private static final String TAG_COLOR = "\033[0;95m";
+    private static final String FRAME_COLOR = "\033[0;96m";
+
     public static void main(String[] args) {
         new GFetch().run(args);
     }
 
     private void run(String[] args) {
-        URL url = userInsertValidation(args);
-        if (java.util.Objects.isNull(url))
+        URL url = validateUserInput(args);
+        if (url == null)
             return;
         String json = fetchUserInfo(url);
-        if (java.util.Objects.isNull(json))
+        if (json == null)
             return;
+        Map<String, Object> userdata = parseUserInfo(json);
+        if (userdata == null)
+            return;
+
     }
 
-    private URL userInsertValidation(String[] args) {
+    private URL validateUserInput(String[] args) {
         if (args.length > 0) {
             try {
                 return new URL("https://api.github.com/users/" + args[0]);
@@ -62,13 +75,31 @@ public class GFetch {
         } catch (Throwable cause) {
             cause.printStackTrace();
         } finally {
-            if (!java.util.Objects.isNull(connection)) {
+            if (connection != null) {
                 connection.disconnect();
             }
         }
-        if (java.util.Objects.isNull(userInfo))
+        if (userInfo == null)
             return null;
         else
-            return  userInfo.toString();
+            return userInfo.toString();
+    }
+
+    private Map<String, Object> parseUserInfo(String json) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        Map<String, Object> jsonMap;
+        Map<String, Object> userdata  = new LinkedHashMap<String, Object>();
+        try {
+            jsonMap = objectMapper.readValue(json, new TypeReference<Map<String, Object>>(){});
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            return null;
+        }
+        userdata.put("Username",jsonMap.get("login"));
+        userdata.put("Repos",jsonMap.get("public_repos"));
+        userdata.put("Gists",jsonMap.get("public_gists"));
+        userdata.put("Followers",jsonMap.get("followers"));
+        userdata.put("Url",jsonMap.get("url"));
+        return userdata;
     }
 }
